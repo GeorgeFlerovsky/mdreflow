@@ -18,6 +18,9 @@ At release time the section is retitled to the version and the prose lead is wri
   In plain Markdown such lines are no longer joined to their neighbors; nothing renders differently.
 - A hard break written as a self-closing `<br />` or `<br/>` now keeps its slash, emitted as `<br />`.
   Every `<br>` tag was respelled unclosed, which MDX rejects because it parses tags as JSX.
+- A wrapped line that starts with a run of backticks followed by a tilde, or a run of tildes followed by backticks, keeps its strikethrough or code span.
+  To stop the line opening a code fence, mdreflow escapes its leading run, and it escaped the other character after the run too, which removed the strikethrough or broke the code span.
+  It now escapes only the fence's own character.
 
 ## v0.3.0 (2026-08-14)
 

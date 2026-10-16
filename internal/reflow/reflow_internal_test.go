@@ -107,8 +107,9 @@ func TestIsFenceOpener(t *testing.T) {
 	}
 }
 
-// TestFenceOpenerRunLen checks the leading backtick/tilde run length
-// isFenceOpener and escapeBlockInterrupt's fence branch both rely on.
+// TestFenceOpenerRunLen checks the fence-opener run length
+// escapeFenceOpenerRun and escapeDeltaMax both rely on: the line's leading
+// run of one fence character, stopping at the other one.
 func TestFenceOpenerRunLen(t *testing.T) {
 	cases := []struct {
 		name string
@@ -118,7 +119,8 @@ func TestFenceOpenerRunLen(t *testing.T) {
 		{"three backticks", "```", 3},
 		{"three backticks plus info", "```go", 3},
 		{"five tildes", "~~~~~go", 5},
-		{"mixed run counts all", "``~~go", 4},
+		{"backtick run stops at a tilde", "```~go", 3},
+		{"tilde run stops at a backtick", "~~~``go", 3},
 		{"no run", "go```", 0},
 		{"empty", "", 0},
 	}
@@ -344,6 +346,8 @@ func TestEscapeBlockInterrupt(t *testing.T) {
 		{"setext underline escaped", "===", false, "", true, "\\==="},
 
 		{"fence opener backtick escaped as entity", "```go", false, "", true, "&#96;&#96;&#96;go"},
+		{"strikethrough after a backtick fence run stays", "```~x~", false, "", true, "&#96;&#96;&#96;~x~"},
+		{"code span after a tilde fence run stays", "~~~``x``", false, "", true, "\\~\\~\\~``x``"},
 		{"fence opener tilde escaped with backslash", "~~~go", false, "", true, "\\~\\~\\~go"},
 
 		{"link ref def opener escaped", "[foo]: /url", false, "", true, "\\[foo]: /url"},
