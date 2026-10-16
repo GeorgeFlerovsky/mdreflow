@@ -67,7 +67,7 @@ var skipRules = []skipRule{
 	{
 		Name:           "github-alert-marker",
 		Dialect:        "GFM",
-		Pattern:        regexp.MustCompile(`^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]`),
+		Pattern:        regexp.MustCompile(`^\[!(?i:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]`),
 		Kind:           lineBoundary,
 		BlockquoteOnly: true,
 	},
@@ -156,7 +156,7 @@ func wholeNodeSkip(trimmedLines []string) bool {
 // cannot bring about, and "export"/"import" are ordinary enough English
 // words that refusing to start a line with one would be a real
 // line-quality cost for no correctness gain.
-var markerLineStartRE = regexp.MustCompile(`^[ \t]*(:::|\{\{[<%]|\$\$|\+\+\+|\{[^{}]*\}|\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\])`)
+var markerLineStartRE = regexp.MustCompile(`^[ \t]*(:::|\{\{[<%]|\$\$|\+\+\+|\{[^{}]*\}|\[!(?i:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\])`)
 
 // MarkerLineStart reports whether s, placed at the start of a fresh
 // output line, could be recognized as a dialect marker by the skip-list
