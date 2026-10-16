@@ -12,6 +12,10 @@ At release time the section is retitled to the version and the prose lead is wri
 - A GitHub alert with a mixed-case or lowercase type, such as `> [!Note]` or `> [!tip]`, now keeps its marker on its own line.
   GitHub matches the type case-insensitively, but mdreflow recognized only the uppercase spelling.
   It joined the alert's first sentence onto a mixed-case marker, and GitHub then rendered a plain blockquote showing `[!Note]` as text.
+- A line that holds only a JSX or HTML tag, such as `</Steps>`, `<RequestId />` or `<img … style={{…}} />`, is now left exactly as written.
+  Directly under a paragraph or list item, mdreflow joined such a line onto the prose or indented it into the list item, and it backslash-escaped elements with expression attributes.
+  MDX reads these lines as block JSX, so each of those edits changed the page.
+  In plain Markdown such lines are no longer joined to their neighbors; nothing renders differently.
 
 ## v0.3.0 (2026-08-14)
 

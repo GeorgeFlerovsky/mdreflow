@@ -180,6 +180,7 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 | Tables | GFM | skip block |
 | Raw HTML blocks | CommonMark | skip block |
 | JSX blocks, `{expr}` spans | MDX | skip block / no-break span |
+| Lines holding only a tag (`</Steps>`, `<RequestId />`) | MDX | immovable boundary (below) |
 | `:::` directives | Docusaurus/remark | skip fence lines; interior prose reflows |
 | Math blocks (`$$`) | GFM, Docusaurus | skip block |
 | Hugo shortcodes (`{{< … >}}`, `{{% … %}}`) | Hugo | skip block / no-break span |
@@ -190,6 +191,15 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 
 **Spike M0 outcome** (details and evidence in [m0-spike-findings.md](m0-spike-findings.md)): goldmark does not parse MDX, and many dialect constructs do land as `Paragraph` nodes — but a general line-scanning pre-pass is *not* needed.
 The block-map derivation step grows content-pattern rules instead: (1) skip whole `Paragraph` nodes whose text matches a marker regex (`:::` fences, block shortcodes, block `{expr}`, `+++` TOML front matter); (2) within a `Paragraph`, treat any `Lines()` segment matching a marker regex as an immovable boundary — this handles fences fused with prose by lazy continuation (no-blank-line `:::`, `> [!NOTE]` markers, paired shortcodes, `$$` math); (3) recognize YAML front matter ourselves via a byte-range pre-scan (originally goldmark-meta, replaced — see Dependencies); (4) inline `{expr}`/shortcodes/math are invisible to the AST (plain `Text`) and need the already-planned regex scan for no-break spans.
+**A line holding only a tag is an immovable boundary** (`mdx-jsx-tag-line`): one opening, closing or self-closing tag and nothing else.
+MDX reads such a line as block JSX even directly under a paragraph or list item, where CommonMark reads lazy continuation text.
+Joined onto the prose, `</Steps>` becomes inline JSX inside the paragraph; re-indented, `<RequestId />` moves into the list item above.
+An element whose attributes hold expressions (`style={{…}}`) is not a valid HTML tag, so CommonMark parses its line as a prose paragraph, which reflow would wrap and escape.
+The render backstop sees none of this, since goldmark reads both spellings alike.
+The rule applies in every dialect; in plain Markdown its only cost is that such a line is never joined to its neighbors.
+A tag followed by text on the same line is inline HTML or JSX in a paragraph, in both grammars, so such a line reflows as usual.
+The rule is absent from `markerLineStartRE` because it depends on where a line ends, which a break candidate cannot know; a line that reflow leaves holding only a tag is frozen as-is on the next pass.
+
 The one construct post-parse rules cannot recover is a multi-line JSX opening tag whose closing `>` sits alone on a line (goldmark consumes it as an empty blockquote) — documented as a known limitation, revisit with a narrow raw-line fence if it shows up in real content.
 
 ### Sentence segmentation
