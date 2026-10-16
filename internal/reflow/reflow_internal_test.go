@@ -439,3 +439,28 @@ func TestClauseBreaksPunctuation(t *testing.T) {
 		})
 	}
 }
+
+// TestContainerWidth tables containerWidth: the container prefix comes off
+// the limit, floored at minContentWidth (or at the limit itself when that is
+// smaller), and 0 keeps its per-mode meaning.
+func TestContainerWidth(t *testing.T) {
+	cases := []struct {
+		name   string
+		opts   Options
+		prefix string
+		want   int
+	}{
+		{"quote inside list", Options{MaxWidth: 80}, "   > ", 75},
+		{"deep nesting floors at the minimum", Options{MaxWidth: 30}, "            > > ", 20},
+		{"limit below the minimum is kept", Options{MaxWidth: 5}, "  > ", 5},
+		{"unbounded sentence mode stays unbounded", Options{}, "  ", 0},
+		{"wrap mode default width", Options{Mode: ModeWrap}, "> ", 78},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := containerWidth(tc.opts, tc.prefix); got != tc.want {
+				t.Errorf("containerWidth(%+v, %q) = %d, want %d", tc.opts, tc.prefix, got, tc.want)
+			}
+		})
+	}
+}
