@@ -1024,6 +1024,8 @@ func FuzzFormat(f *testing.F) {
 		"\x00\x01\x02",
 		"a.\\\n",
 		"a.  \n",
+		"a<br />\nb",
+		"<BR/>\nb",
 		// MkDocs admonition shapes (#26), each padded with trailing blank
 		// lines so its own hash derives DialectMkDocs (see deriveOptions) —
 		// otherwise a hand-picked seed only reaches the mkdocs dialect by
