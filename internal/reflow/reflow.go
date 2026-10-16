@@ -919,21 +919,16 @@ func (m *widthMeasurer) canonSlice(a, b int) string {
 
 // escapeDeltaMax bounds how many runes escapeBlockInterrupt can add to
 // any line starting at byte a: a fence-opener-shaped line gains, per
-// character of its leading backtick/tilde run (see the escape loop in
-// escapeBlockInterrupt), one rune for a tilde ("~" -> "\~") or four for a
-// backtick ("`" -> "&#96;", 1 rune growing to 5); every other trigger gains
-// exactly one. The leading run depends only on the line's start, so the
-// bound does too.
+// character of its fence-opener run (fenceOpenerRunLen), one rune for a
+// tilde ("~" -> "\~") or four for a backtick ("`" -> "&#96;", 1 rune
+// growing to 5); every other trigger gains exactly one. The run depends
+// only on the line's start, so the bound does too.
 func (m *widthMeasurer) escapeDeltaMax(a int) int {
-	n := 0
-	for i := a; i < len(m.text) && (m.text[i] == '`' || m.text[i] == '~'); i++ {
-		if m.text[i] == '`' {
-			n += 4
-		} else {
-			n++
-		}
+	run := fenceOpenerRunLen(m.text[a:])
+	if run > 0 && m.text[a] == '`' {
+		return 4 * run
 	}
-	return max(n, 1)
+	return max(run, 1)
 }
 
 // fits reports whether the line text[a:b] fits within maxWidth once
@@ -1652,12 +1647,19 @@ func isFenceOpener(line string) bool {
 	return tildeFenceStart.MatchString(line)
 }
 
-// fenceOpenerRunLen returns the length of line's leading run of backticks
-// and/or tildes — the run isFenceOpener recognizes and that
-// escapeBlockInterrupt's fence-opener branch walks.
+// fenceOpenerRunLen returns the length of line's leading run of one fence
+// character, backtick or tilde: the run isFenceOpener recognizes and
+// escapeFenceOpenerRun escapes. It is 0 when line does not start with
+// either. The other character after the run is not part of the fence, so
+// escaping it would only change what the line renders to: a "~" after
+// backticks opens strikethrough, and backticks after tildes can pair as a
+// code span.
 func fenceOpenerRunLen(line string) int {
-	i := 0
-	for i < len(line) && (line[i] == '`' || line[i] == '~') {
+	if line == "" || (line[0] != '`' && line[0] != '~') {
+		return 0
+	}
+	i := 1
+	for i < len(line) && line[i] == line[0] {
 		i++
 	}
 	return i

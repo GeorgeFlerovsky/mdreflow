@@ -27,6 +27,9 @@ At release time the section is retitled to the version and the prose lead is wri
   Only the text after the prefix was measured, so a line in a quote inside a list could exceed the limit by the prefix's width.
   A deeply nested paragraph still keeps at least 20 characters of text per line.
   Expect lines inside lists and quotes to rewrap once.
+- A wrapped line that starts with a run of backticks followed by a tilde, or a run of tildes followed by backticks, keeps its strikethrough or code span.
+  To stop the line opening a code fence, mdreflow escapes its leading run, and it escaped the other character after the run too, which removed the strikethrough or broke the code span.
+  It now escapes only the fence's own character.
 
 ## v0.3.0 (2026-08-14)
 
