@@ -375,7 +375,7 @@ func writeParagraph(buf *bytes.Buffer, p blockmap.Paragraph, source []byte, seg 
 		}
 
 		marker, rest := detectHardBreak(content, i == n-1, insideSpanAfter[i], astHardAfter[i], opts.MkDocs)
-		if i == 0 && i < n-1 && trimLineSpace(rest) == "" && marker == "<br>" {
+		if i == 0 && i < n-1 && trimLineSpace(rest) == "" && strings.HasPrefix(marker, "<br") {
 			// Fuzz-found hazard: a paragraph's first output line, with no
 			// prose preceding a source-authored "<br>" marker, would
 			// consist solely of the bytes "<br>" — which, on a line that
@@ -2467,7 +2467,7 @@ func detectHardBreak(content string, isLastLine, insideSpan, astHard, mkdocs boo
 	}
 
 	// <br>.
-	if m := hardBreakBrRE.FindStringIndex(content); m != nil {
+	if m := hardBreakBrRE.FindStringSubmatchIndex(content); m != nil {
 		prefix := content[:m[0]]
 		// The backslash-escape check must look at the byte immediately
 		// before the "<" itself, not before the whole match: hardBreakBrRE
@@ -2491,6 +2491,11 @@ func detectHardBreak(content string, isLastLine, insideSpan, astHard, mkdocs boo
 			// line break — a content change, not a style change. Found
 			// by FuzzFormat on "00000\<Br>".
 			return "", content
+		}
+		// A self-closing slash survives canonicalization: MDX parses tags
+		// as JSX, which rejects an unclosed "<br>".
+		if m[2] >= 0 {
+			return markerFor("<br />", mkdocs), prefix
 		}
 		return markerFor("<br>", mkdocs), prefix
 	}

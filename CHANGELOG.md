@@ -16,6 +16,8 @@ At release time the section is retitled to the version and the prose lead is wri
   Directly under a paragraph or list item, mdreflow joined such a line onto the prose or indented it into the list item, and it backslash-escaped elements with expression attributes.
   MDX reads these lines as block JSX, so each of those edits changed the page.
   In plain Markdown such lines are no longer joined to their neighbors; nothing renders differently.
+- A hard break written as a self-closing `<br />` or `<br/>` now keeps its slash, emitted as `<br />`.
+  Every `<br>` tag was respelled unclosed, which MDX rejects because it parses tags as JSX.
 
 ## v0.3.0 (2026-08-14)
 

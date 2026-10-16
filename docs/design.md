@@ -292,7 +292,9 @@ This is the same fallback rule as the escaped-backslash-run position, applied at
 
 This class of defect is invisible to both safety nets: the render backstop and the fuzz oracle compare through goldmark, where the backslash spelling *is* a break, so both sides of the comparison agree on output that breaks the published page.
 Only a real `mkdocs build` diff can see it, which makes the release procedure's probe page load-bearing rather than a nicety.
-A source-authored `<br>` is always kept, canonicalized to lowercase, un-self-closed spelling (`<Br />` and `<BR>` both emit `<br>`) since a cluster join can manufacture a `<br>`-shaped tag from bytes no single source line carried, and a canonical spelling is needed for the pipeline to recognize its own output on the next pass.
+A source-authored `<br>` is always kept, in a canonical lowercase spelling (`<BR>` emits `<br>`).
+A cluster join can manufacture a `<br>`-shaped tag from bytes no single source line carried, and the pipeline needs a canonical spelling to recognize its own output on the next pass.
+The canonical spelling keeps a self-closing slash (`<Br/>` and `<br  />` emit `<br />`): MDX parses tags as JSX, which rejects an unclosed `<br>`, while HTML renderers read the two spellings alike.
 This removes `Options.HardBreaks`: there is no longer a style to configure.
 See [why-this-is-hard.md](why-this-is-hard.md) for the full context matrix behind this decision.
 
