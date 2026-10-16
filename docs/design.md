@@ -394,6 +394,7 @@ The fallback is scoped to the one paragraph, which is the point: the document-le
 It is verdict-stable by construction — the answer is a function of the paragraph's own source bytes, and a paragraph that falls back emits exactly those bytes, so the next pass re-derives it and settles.
 The check is deliberately narrow rather than a per-paragraph render comparison: definition formation is decided by the lines the definition occupies, whereas a render diff at this scope would be unsound, since a reference *link* resolves against definitions elsewhere in the document and a paragraph containing `[foo]` renders differently alone than in place.
 For the same reason the window matters: a definition formed from the line above plus the paragraph's first line is invisible inside the paragraph, which is why the neighbor check above is a separate protection rather than one this subsumes.
+Both sides are compared with the container prefix stripped from their continuation lines, since a paragraph's own parse never sees those markers; parsed with them, a `>` prefix turns the lines into a nested quote and hides the definition.
 
 The exemption applies to a paragraph's *own* shape only — the zone's
 neighbor checks have no footnote carve-out (issue #41 removed the one they

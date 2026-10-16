@@ -116,7 +116,14 @@ func Format(source []byte, doc ast.Node, seg Segmenter, opts Options) []byte {
 		// this paragraph's own source bytes, and a paragraph that falls back
 		// emits those same bytes, so the next pass re-derives the same
 		// answer and settles.
-		if gm.FormsNewLinkRefDef(source[p.Start:p.End], pb.Bytes()) {
+		//
+		// Both sides are compared without the container prefix on their
+		// continuation lines. Parsed on its own, a ">" prefix makes those
+		// lines a nested blockquote, which hides a definition that does form
+		// in the document.
+		before := withoutContPrefix(source[p.Start:p.End], p.ContPrefix)
+		after := withoutContPrefix(pb.Bytes(), p.ContPrefix)
+		if gm.FormsNewLinkRefDef(before, after) {
 			out.Write(source[p.Start:p.End])
 		} else {
 			out.Write(pb.Bytes())
@@ -125,6 +132,21 @@ func Format(source []byte, doc ast.Node, seg Segmenter, opts Options) []byte {
 	}
 	out.Write(source[cursor:])
 	return out.Bytes()
+}
+
+// withoutContPrefix returns b with prefix removed from the start of every
+// line after the first: the paragraph text its own parse sees once the
+// container markers are consumed. A line that does not start with prefix
+// (a lazy continuation line) is left as is.
+func withoutContPrefix(b []byte, prefix string) []byte {
+	if prefix == "" {
+		return b
+	}
+	lines := bytes.Split(b, []byte("\n"))
+	for i := 1; i < len(lines); i++ {
+		lines[i] = bytes.TrimPrefix(lines[i], []byte(prefix))
+	}
+	return bytes.Join(lines, []byte("\n"))
 }
 
 // outLine is one line of writeParagraph's output.

@@ -32,6 +32,8 @@ At release time the section is retitled to the version and the prose lead is wri
   It now escapes only the fence's own character.
 - A paragraph that mentions an unclosed tag inside inline code, such as `` `<Image` `` or `` `<img` ``, now splits into sentences like any other.
   The guard that keeps tag-like text from being split treated the opener as the start of a tag and protected the rest of the paragraph.
+- A paragraph inside a blockquote whose reflow would turn part of its text into a link reference definition is now left as written, while the rest of the file still formats.
+  The check that catches this read the reflowed lines with their `>` markers, which hid the definition; the whole-file safety check then caught it instead and left the entire file unformatted.
 
 ## v0.3.0 (2026-08-14)
 
