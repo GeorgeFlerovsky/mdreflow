@@ -1022,6 +1022,7 @@ func FuzzFormat(f *testing.F) {
 		"a b: c d — e f -- g – h",
 		"[^1]: a b, c: d",
 		"**A: b** c: 1. d",
+		"1. a:\n\t\t```sh\n\t\tx\n\t\t```\n",
 		"- \n- \n",
 		"1. a\n10. b\n",
 		"\x00\x01\x02",

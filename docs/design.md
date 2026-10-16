@@ -184,6 +184,7 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 | Raw HTML blocks | CommonMark | skip block |
 | JSX blocks, `{expr}` spans | MDX | skip block / no-break span |
 | Lines holding only a tag (`</Steps>`, `<RequestId />`) | MDX | immovable boundary (below) |
+| Paragraphs with a fence line indented into lazy continuation | MDX | skip block (MDX disables indented code, so it reads a fence where CommonMark reads text) |
 | `:::` directives | Docusaurus/remark | skip fence lines; interior prose reflows |
 | Math blocks (`$$`) | GFM, Docusaurus | skip block |
 | Hugo shortcodes (`{{< … >}}`, `{{% … %}}`) | Hugo | skip block / no-break span |
