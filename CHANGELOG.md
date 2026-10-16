@@ -18,6 +18,11 @@ At release time the section is retitled to the version and the prose lead is wri
   In plain Markdown such lines are no longer joined to their neighbors; nothing renders differently.
 - A hard break written as a self-closing `<br />` or `<br/>` now keeps its slash, emitted as `<br />`.
   Every `<br>` tag was respelled unclosed, which MDX rejects because it parses tags as JSX.
+- With `--max-width`, sentence mode now also breaks a long sentence after a colon or a dash (an em dash, `--`, or a spaced en dash), as well as after a comma or semicolon.
+  This avoids orphaned tails such as a lone "cache." on the last line of "…tied to a specific client — typically a browser cache."
+  A colon or dash with no space after it, as in `10:30`, `https://` or `2010–2020`, is never a break.
+  A word break is used instead when the clause break sits inside bold or italic text, such as **Terminal: Select Default Profile**, or right after a footnote or link definition label.
+  It is also used where the next line would otherwise start with something needing a backslash escape, such as `1. open` after "steps:".
 
 ## v0.3.0 (2026-08-14)
 

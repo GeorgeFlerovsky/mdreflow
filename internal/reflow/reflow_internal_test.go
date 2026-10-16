@@ -1,6 +1,7 @@
 package reflow
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/jbeda/mdreflow/internal/segment"
@@ -394,6 +395,46 @@ func TestFilterLineStartHazardsFenceOpener(t *testing.T) {
 			if kept := len(got) == 1; kept != tc.kept {
 				t.Errorf("filterLineStartHazards(%q, %v) kept=%v, want kept=%v",
 					tc.text, tc.gap, kept, tc.kept)
+			}
+		})
+	}
+}
+
+// TestClauseBreaksPunctuation tables clauseBreaksRE's candidate set: each
+// clause mark yields a break at the whitespace run after it, and a mark
+// with no whitespace after it (a time, a URL scheme, a range, a dash joining
+// two words) never does, since cutting there would insert whitespace the
+// source never had.
+func TestClauseBreaksPunctuation(t *testing.T) {
+	cases := []struct {
+		name string
+		text string
+		want []string // the text before each candidate, in order
+	}{
+		{"comma", "one, two", []string{"one,"}},
+		{"semicolon", "one; two", []string{"one;"}},
+		{"colon", "one: two", []string{"one:"}},
+		{"spaced em dash", "one — two", []string{"one —"}},
+		{"double hyphen", "one -- two", []string{"one --"}},
+		{"spaced en dash", "one – two", []string{"one –"}},
+		{"time is not a candidate", "at 10:30 today", nil},
+		{"url scheme is not a candidate", "see https://example.com now", nil},
+		{"en dash range is not a candidate", "pages 10–20 here", nil},
+		{"unspaced em dash is not a candidate", "one—two", nil},
+		{"entity semicolon is not a candidate", "caf&eacute; more", nil},
+		{"colon inside code span is not a candidate", "use `a: b` here", nil},
+		{"footnote definition colon is not a candidate", "[^2]: Although two, more", []string{"[^2]: Although two,"}},
+		{"colon inside strong emphasis is not a candidate", "use **Terminal: Select Profile** now", nil},
+		{"colon after emphasis is a candidate", "**Note**: text", []string{"**Note**:"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var got []string
+			for _, b := range clauseBreaks(tc.text) {
+				got = append(got, tc.text[:b.Start])
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("clauseBreaks(%q) breaks after %q, want %q", tc.text, got, tc.want)
 			}
 		})
 	}
