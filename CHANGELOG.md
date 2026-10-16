@@ -30,6 +30,8 @@ At release time the section is retitled to the version and the prose lead is wri
 - A wrapped line that starts with a run of backticks followed by a tilde, or a run of tildes followed by backticks, keeps its strikethrough or code span.
   To stop the line opening a code fence, mdreflow escapes its leading run, and it escaped the other character after the run too, which removed the strikethrough or broke the code span.
   It now escapes only the fence's own character.
+- A paragraph that mentions an unclosed tag inside inline code, such as `` `<Image` `` or `` `<img` ``, now splits into sentences like any other.
+  The guard that keeps tag-like text from being split treated the opener as the start of a tag and protected the rest of the paragraph.
 
 ## v0.3.0 (2026-08-14)
 
