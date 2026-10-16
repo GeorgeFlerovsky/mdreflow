@@ -1015,6 +1015,7 @@ func FuzzFormat(f *testing.F) {
 		"```\nunterminated fence",
 		"> [!NOTE]",
 		"> [!NOTE]\ntext",
+		"> [!note]\ntext",
 		"- \n- \n",
 		"1. a\n10. b\n",
 		"\x00\x01\x02",

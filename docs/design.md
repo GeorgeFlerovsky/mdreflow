@@ -183,7 +183,7 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 | `:::` directives | Docusaurus/remark | skip fence lines; interior prose reflows |
 | Math blocks (`$$`) | GFM, Docusaurus | skip block |
 | Hugo shortcodes (`{{< … >}}`, `{{% … %}}`) | Hugo | skip block / no-break span |
-| GitHub alert first-lines (`> [!NOTE]`) | GFM | marker line is an immovable boundary (it fuses into the quote's paragraph in the AST — see M0 findings); rest of quote reflows |
+| GitHub alert first-lines (`> [!NOTE]`) | GFM | marker line is an immovable boundary (it fuses into the quote's paragraph in the AST — see M0 findings); rest of quote reflows; type matched case-insensitively, as GitHub does |
 | Link reference definitions | CommonMark | skip zone (below) |
 | Footnote definitions (`[^label]:`) | GFM | body reflows; continuations indented (below) |
 | Hard line breaks | CommonMark | immovable boundary (below) |

@@ -673,6 +673,8 @@ func TestIsBoundaryLine(t *testing.T) {
 		{"hugo shortcode block", "{{< foo >}}", false, true},
 		{"github alert marker inside blockquote", "[!NOTE]", true, true},
 		{"github alert marker outside blockquote does not count", "[!NOTE]", false, false},
+		{"github alert marker is case-insensitive", "[!Note]", true, true},
+		{"lowercase github alert marker", "[!tip]", true, true},
 		{"ordinary prose is not a boundary", "just prose", false, false},
 		{"math fence is whole-node, not a line boundary", "$$", false, false},
 	}
@@ -701,6 +703,7 @@ func TestMarkerLineStart(t *testing.T) {
 		{"toml front matter prefix", "+++ trailing", true},
 		{"mdx block expr prefix", "{expr} trailing", true},
 		{"github alert marker prefix", "[!WARNING] trailing", true},
+		{"mixed-case github alert marker prefix", "[!Caution] trailing", true},
 		{"leading whitespace allowed", "   :::note", true},
 		{"import/export deliberately not a marker", "import Foo from 'foo'", false},
 		{"ordinary prose is not a marker", "just some prose", false},

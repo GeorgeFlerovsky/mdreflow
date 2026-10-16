@@ -9,6 +9,10 @@ At release time the section is retitled to the version and the prose lead is wri
 
 ## Unreleased
 
+- A GitHub alert with a mixed-case or lowercase type, such as `> [!Note]` or `> [!tip]`, now keeps its marker on its own line.
+  GitHub matches the type case-insensitively, but mdreflow recognized only the uppercase spelling.
+  It joined the alert's first sentence onto a mixed-case marker, and GitHub then rendered a plain blockquote showing `[!Note]` as text.
+
 ## v0.3.0 (2026-08-14)
 
 **Expect a one-time reflow across your docs on this upgrade.** Sentence mode now splits before a sentence that opens with inline code or emphasis, which is common in technical prose, so most files that use it will pick up new line breaks the first time you run this version.
