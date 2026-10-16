@@ -51,6 +51,27 @@ const (
 // "unbounded" — see Options.MaxWidth's doc comment.
 const defaultWrapWidth = 80
 
+// minContentWidth equals mdreflow.MinMaxWidth.
+const minContentWidth = 20
+
+// containerWidth returns the width to plan a paragraph's breaks against:
+// the limit less its continuation prefix (list indent, "> " markers), so
+// the emitted line fits, prefix included. A list marker is as wide as its
+// continuation indent. A footnote or admonition body's prefix carries four
+// extra spaces, which only makes its first line narrower than it needs to
+// be. The result is floored at minContentWidth, or at the limit itself if
+// that is smaller (test-only widths), so deep nesting keeps room for prose.
+func containerWidth(opts Options, contPrefix string) int {
+	width := opts.MaxWidth
+	if width == 0 && opts.Mode == ModeWrap {
+		width = defaultWrapWidth
+	}
+	if width == 0 || contPrefix == "" {
+		return width
+	}
+	return max(width-runeLen(contPrefix), min(width, minContentWidth))
+}
+
 // Options configures the reflow pipeline. It mirrors the subset of
 // mdreflow.Options the pipeline needs.
 type Options struct {
@@ -345,7 +366,9 @@ func writeParagraph(buf *bytes.Buffer, p blockmap.Paragraph, source []byte, seg 
 		// on this same content, because by the time either pass reaches
 		// it, it is no longer fence-shaped at all.
 		text = escapeFenceOpenerRun(text)
-		clusterLines := computeLines(text, seg, opts)
+		clusterOpts := opts
+		clusterOpts.MaxWidth = containerWidth(opts, p.ContPrefix)
+		clusterLines := computeLines(text, seg, clusterOpts)
 		for i, s := range clusterLines {
 			if i == len(clusterLines)-1 {
 				s = attachMarker(s, marker)
