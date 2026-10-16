@@ -1019,6 +1019,7 @@ func FuzzFormat(f *testing.F) {
 		"text\n</Steps>",
 		"1. a\n2. b\n<X />\n",
 		"<img a={{b:\"c d\"}} />",
+		"1. a:\n\t\t```sh\n\t\tx\n\t\t```\n",
 		"- \n- \n",
 		"1. a\n10. b\n",
 		"\x00\x01\x02",

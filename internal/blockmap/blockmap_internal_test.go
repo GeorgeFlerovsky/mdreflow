@@ -647,6 +647,9 @@ func TestWholeNodeSkip(t *testing.T) {
 		{"mdx block expr triggers wholeNodeAny", []string{"{expr}"}, true},
 		{"mdx import export triggers wholeNodeAll when every line matches", []string{"import Foo from 'foo'", "export default Foo"}, true},
 		{"mdx import export does not trigger when mixed with prose", []string{"import Foo from 'foo'", "some prose"}, false},
+		{"indented backtick fence triggers wholeNodeAny", []string{"Log in:", "```shell", "zcli login", "```"}, true},
+		{"indented tilde fence triggers wholeNodeAny", []string{"Log in:", "~~~", "zcli login", "~~~"}, true},
+		{"two backticks are inline code, not a fence", []string{"``code`` here"}, false},
 		{"ordinary prose triggers nothing", []string{"just some text"}, false},
 		{"docusaurus directive fence is lineBoundary, not whole-node", []string{":::note", "body", ":::"}, false},
 	}

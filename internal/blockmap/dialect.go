@@ -105,6 +105,19 @@ var skipRules = []skipRule{
 		Kind:    lineBoundary,
 	},
 	{
+		// A paragraph line that opens with a fence run once its indentation
+		// is trimmed. CommonMark reads a fence indented four or more columns
+		// past its container as lazy paragraph text, but MDX disables
+		// indented code and reads the same lines as a fenced code block.
+		// Reflowing the paragraph would join the code into prose, so the
+		// whole paragraph passes through; freezing only the fence lines
+		// would still leave the code lines between them to reflow.
+		Name:    "mdx-indented-fence",
+		Dialect: "MDX",
+		Pattern: regexp.MustCompile("^(`{3,}|~{3,})"),
+		Kind:    wholeNodeAny,
+	},
+	{
 		Name:    "mdx-import-export",
 		Dialect: "MDX",
 		Pattern: regexp.MustCompile(`^(import|export)\b`),
