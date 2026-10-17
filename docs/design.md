@@ -186,6 +186,7 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 | Lines holding only a tag (`</Steps>`, `<RequestId />`) | MDX | immovable boundary (below) |
 | Paragraphs with a fence line indented into lazy continuation | MDX | skip block (MDX disables indented code, so it reads a fence where CommonMark reads text) |
 | Template literals with blank lines (`` code={`…`} ``, `` <CodeBlock>{`…`} ``) | MDX | skip the paragraphs that open or lie inside the literal (below) |
+| `import`/`export` statements over several lines | MDX | skip the paragraphs the statement spans (below) |
 | `:::` directives | Docusaurus/remark | skip fence lines; interior prose reflows |
 | Math blocks (`$$`) | GFM, Docusaurus | skip block |
 | Hugo shortcodes (`{{< … >}}`, `{{% … %}}`) | Hugo | skip block / no-break span |
@@ -215,6 +216,13 @@ Counting backticks rather than lexing JavaScript keeps this a skip rule, not a s
 Its one guard against a miscount is the code fence: a line opening with an unescaped run of three backticks cannot be inside a real template literal, so it ends the chain, and a count thrown off by a backtick in a quoted string stops there instead of running on out of phase.
 A blank line elsewhere in an expression, between attributes or inside an object literal, keeps the old handling; a miscount before a fence freezes prose that could have reflowed; neither changes a render.
 The rule is idempotent: every paragraph it reads is frozen, and the blocks between them never reflow.
+
+**An import/export statement freezes the paragraphs it spans.** MDX reads a line that starts at column 1, outside any container, with `import ` or `export ` as the start of an ESM block of JavaScript, which runs to a blank line, or past it while the code there is incomplete.
+The `mdx-import-export` skip rule froze a paragraph only when every line starts with `import` or `export`, so a statement over several lines, such as an object, a function or a styled-components template, was reflowed into broken JavaScript.
+So the paragraph that starts such a block is frozen, and so is each following top-level paragraph that continues the statement: one whose first line is indented or opens with a closing bracket, as code after a blank line inside a statement almost always does.
+The first paragraph that does neither ends the block.
+Telling incomplete code from complete would take a JavaScript parser; the approximation can only freeze an indented paragraph that follows a complete statement, or end the block early, where the rest reflows as before.
+A top-level paragraph that opens with `import ` as prose is frozen too, which matches MDX: it reads that line as JavaScript as well, and fails to parse it.
 
 ### Sentence segmentation
 

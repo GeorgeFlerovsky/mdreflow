@@ -1073,3 +1073,64 @@ func TestSkipTemplateLiteral(t *testing.T) {
 		})
 	}
 }
+
+func TestSkipImportExport(t *testing.T) {
+	cases := []struct {
+		name     string
+		src      string
+		reasons  []SkipReason
+		eligible []string
+	}{
+		{
+			name:     "a statement over several lines",
+			src:      "export const meta = {\n  title: 'A',\n}\n\nOne. Two.\n",
+			reasons:  []SkipReason{SkipImportExport},
+			eligible: []string{"One. Two."},
+		},
+		{
+			name:     "a function body with a blank line",
+			src:      "export function A() {\n  const a = 1\n\n  return a\n}\n\nOne. Two.\n",
+			reasons:  []SkipReason{SkipImportExport, SkipImportExport},
+			eligible: []string{"One. Two."},
+		},
+		{
+			name:     "a closing bracket after a blank line continues the statement",
+			src:      "export const a = [\n  1,\n\n]\n\nOne. Two.\n",
+			reasons:  []SkipReason{SkipImportExport, SkipImportExport},
+			eligible: []string{"One. Two."},
+		},
+		{
+			// MDX reads this as JavaScript too, and fails to parse it.
+			name:     "any top-level line starting with import and a space",
+			src:      "import the module first.\nThen run it.\n",
+			reasons:  []SkipReason{SkipImportExport},
+			eligible: nil,
+		},
+		{
+			name:     "an indented line is not at column 1",
+			src:      "  export const a = 1\nand prose.\n",
+			reasons:  nil,
+			eligible: []string{"export const a = 1\nand prose."},
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			src := []byte(tc.src)
+			doc := gm.New().Parser().Parse(text.NewReader(src))
+			var reasons []SkipReason
+			for _, sk := range SkipsForDialect(doc, src, false) {
+				reasons = append(reasons, sk.Reason)
+			}
+			if !slices.Equal(reasons, tc.reasons) {
+				t.Errorf("skip reasons = %v, want %v", reasons, tc.reasons)
+			}
+			var eligible []string
+			for _, p := range ParagraphsForDialect(doc, src, false) {
+				eligible = append(eligible, string(src[p.Start:p.End]))
+			}
+			if !slices.Equal(eligible, tc.eligible) {
+				t.Errorf("eligible paragraphs = %q, want %q", eligible, tc.eligible)
+			}
+		})
+	}
+}
