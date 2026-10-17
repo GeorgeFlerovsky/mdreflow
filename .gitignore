@@ -13,3 +13,6 @@ dist/
 
 # Gate-mode fuzz soak records (task fuzz-gate); not a build artifact worth keeping.
 fuzz-gate.log
+
+# nix build output
+/result
