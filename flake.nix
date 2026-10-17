@@ -18,14 +18,14 @@
       packages = forAllSystems (pkgs: rec {
         mdreflow = pkgs.buildGoModule {
           pname = "mdreflow";
-          version = "0.3.0-fork.1";
+          version = "0.3.0-fork.2";
           src = self;
           vendorHash = "sha256-8utHKF28vko8pwPlBgouRqhtyQPqtMNYqHOoMYXdSrg=";
           subPackages = [ "cmd/mdreflow" ];
           ldflags = [
             "-s"
             "-w"
-            "-X main.version=v0.3.0-fork.1"
+            "-X main.version=v0.3.0-fork.2"
             "-X main.commit=${self.shortRev or "dirty"}"
             "-X main.date=${self.lastModifiedDate}"
           ];
