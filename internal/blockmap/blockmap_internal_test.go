@@ -1034,6 +1034,26 @@ func TestSkipTemplateLiteral(t *testing.T) {
 			eligible: []string{"prose two"},
 		},
 		{
+			name:     "a literal within one paragraph that spans lines",
+			src:      "<CodeBlock language=\"bash\">{`docker run \\\n  -p 80:80 \\\n  nginx`}</CodeBlock>\n\nafter it\n",
+			reasons:  []SkipReason{SkipTemplateLiteral},
+			eligible: []string{"after it"},
+		},
+		{
+			name:     "a literal opened inside an object",
+			src:      "<Sandpack files={{\n  \"index.js\": `const a = 1\n\nconst b = 2`,\n}} />\n\nafter it\n",
+			reasons:  []SkipReason{SkipTemplateLiteral, SkipTemplateLiteral},
+			eligible: []string{"after it"},
+		},
+		{
+			// Code spans in braces, on one line: reflow never breaks inside a
+			// code span, so the paragraph stays eligible.
+			name:     "a one-line literal in prose",
+			src:      "Runs N × {`Before`, `After`} once. Then\nit stops.\n",
+			reasons:  nil,
+			eligible: []string{"Runs N × {`Before`, `After`} once. Then\nit stops."},
+		},
+		{
 			name:     "inline code holding a brace is prose",
 			src:      "Use `{` and `}` here.\n",
 			reasons:  nil,

@@ -11,19 +11,23 @@ import (
 // literal: `{` then a backtick, as in code={`…`} or <CodeBlock>{`…`}.
 var templateOpenerRE = regexp.MustCompile("\\{\\s*`")
 
-// literalChain freezes the paragraphs of an MDX template literal that holds
-// blank lines.
+// literalChain freezes the paragraphs of an MDX template literal that spans
+// lines.
 //
 // A code sample passed to a component as a template literal, as an attribute
-// (code={`…`}) or as children (<CodeBlock>{`…`}</CodeBlock>), often holds
-// blank lines. goldmark ends a paragraph at each one, so the literal's text
-// becomes paragraphs that read as prose, and reflowing them rewrites the code
-// the page shows. A paragraph that opens such an expression and leaves the
-// backtick count odd starts a chain; the chain then counts unescaped backticks
-// in the raw source, and while the count is odd, each paragraph that starts
-// there is inside the literal. The paragraph that opens the chain and every
-// paragraph inside it are frozen (SkipTemplateLiteral). The first paragraph
-// that starts with the count even ends the chain and is handled as usual.
+// (code={`…`}), as children (<CodeBlock>{`…`}</CodeBlock>) or inside an
+// object (files={{"a.js": `…`}}), spans lines, and its whitespace is the
+// code. Reflowing the paragraph that holds it joins those lines; and where
+// the literal holds blank lines, goldmark ends a paragraph at each one, so
+// the rest of the literal becomes paragraphs that read as prose.
+//
+// So a paragraph is frozen (SkipTemplateLiteral) when it opens a literal that
+// runs past the end of its line ('{', optional whitespace, a backtick; see
+// opensTemplate), or when it leaves the count of unescaped backticks odd with
+// a '{' before the unmatched one. The second case also starts a chain: the
+// walk keeps counting backticks in the raw source, and while the count is
+// odd, each paragraph that starts there is inside the literal and frozen too.
+// The first paragraph that starts with the count even ends the chain.
 //
 // Only backticks are counted, not JavaScript or JSX syntax. A line that opens
 // with an unescaped run of three backticks cannot be inside a real template
@@ -68,15 +72,51 @@ func (lc *literalChain) inside(p ast.Node, source []byte) bool {
 		return true
 	}
 	*lc = literalChain{}
-	if !templateOpenerRE.Match(source[start:stop]) {
-		return false
-	}
-	*lc = literalChain{active: true, pos: start}
-	if lc.advance(source, stop) && lc.odd {
+	para := source[start:stop]
+	opens := opensTemplate(para)
+	odd, unmatched := oddBackticks(para)
+	if odd && bytes.IndexByte(para[:unmatched], '{') >= 0 {
+		*lc = literalChain{active: true, pos: stop, odd: true}
 		return true
 	}
-	*lc = literalChain{}
+	return opens
+}
+
+// opensTemplate reports whether para holds an MDX expression that opens a
+// template literal spanning a line break: '{', optional whitespace, then a
+// backtick, with an even number of backticks before the '{' (so it is not
+// inside a code span), and no closing backtick before the end of its line.
+// A literal on one line is safe to leave to reflow, which never breaks inside
+// what goldmark reads as a code span; requiring the line break keeps prose
+// such as "N × {`Before`, `After`}" reflowing.
+func opensTemplate(para []byte) bool {
+	for _, m := range templateOpenerRE.FindAllIndex(para, -1) {
+		if odd, _ := oddBackticks(para[:m[0]]); odd {
+			continue
+		}
+		rest := para[m[1]:]
+		eol := bytes.IndexByte(rest, '\n')
+		if eol < 0 {
+			eol = len(rest)
+		}
+		if odd, _ := oddBackticks(rest[:eol]); !odd {
+			return true // no closing backtick on the opener's line
+		}
+	}
 	return false
+}
+
+// oddBackticks reports whether b holds an odd number of unescaped backticks,
+// and if so the offset of the last one.
+func oddBackticks(b []byte) (bool, int) {
+	odd, last := false, -1
+	for i, c := range b {
+		if c == '`' && !backslashEscaped(b, i) {
+			odd = !odd
+			last = i
+		}
+	}
+	return odd, last
 }
 
 // opensWithFence reports whether line, after leading spaces and tabs, opens
