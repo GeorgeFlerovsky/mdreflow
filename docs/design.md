@@ -180,7 +180,7 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 | Tables | GFM | skip block |
 | Raw HTML blocks | CommonMark | skip block |
 | JSX blocks, `{expr}` spans | MDX | skip block / no-break span |
-| Template literals with blank lines (`` code={`…`} ``, `` <CodeBlock>{`…`} ``) | MDX | skip the paragraphs that open or lie inside the literal (below) |
+| Template literals that span lines (`` code={`…`} ``, `` <CodeBlock>{`…`} ``) | MDX | skip the paragraphs that open or lie inside the literal (below) |
 | `import`/`export` statements over several lines | MDX | skip the paragraphs the statement spans (below) |
 | `:::` directives | Docusaurus/remark | skip fence lines; interior prose reflows |
 | Math blocks (`$$`) | GFM, Docusaurus | skip block |
@@ -194,10 +194,11 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 The block-map derivation step grows content-pattern rules instead: (1) skip whole `Paragraph` nodes whose text matches a marker regex (`:::` fences, block shortcodes, block `{expr}`, `+++` TOML front matter); (2) within a `Paragraph`, treat any `Lines()` segment matching a marker regex as an immovable boundary — this handles fences fused with prose by lazy continuation (no-blank-line `:::`, `> [!NOTE]` markers, paired shortcodes, `$$` math); (3) recognize YAML front matter ourselves via a byte-range pre-scan (originally goldmark-meta, replaced — see Dependencies); (4) inline `{expr}`/shortcodes/math are invisible to the AST (plain `Text`) and need the already-planned regex scan for no-break spans.
 The one construct post-parse rules cannot recover is a multi-line JSX opening tag whose closing `>` sits alone on a line (goldmark consumes it as an empty blockquote) — documented as a known limitation, revisit with a narrow raw-line fence if it shows up in real content.
 
-**A template literal holding blank lines freezes its paragraphs.** A code sample passed to a component as a template literal, as an attribute (`` code={`…`} ``) or as children (`` <CodeBlock>{`…`}</CodeBlock> ``), often holds blank lines.
-Each one ends a goldmark paragraph, so the literal's text becomes paragraphs that read as prose, and reflowing them rewrites the code the page shows.
-So a paragraph, or an HTML block, that contains `{` and a backtick and leaves the count of unescaped backticks odd starts a chain: the walk keeps counting in the raw source, and while the count is odd, each paragraph that starts there is inside the literal.
-The paragraph that opens the chain and every paragraph inside it pass through byte-for-byte; the first paragraph that starts with the count even is handled as usual.
+**A template literal that spans lines freezes its paragraphs.** A code sample passed to a component as a template literal, as an attribute (`` code={`…`} ``), as children (`` <CodeBlock>{`…`}</CodeBlock> ``) or inside an object, spans lines, and its whitespace is the code.
+Reflowing the paragraph that holds it joins those lines, and where the literal holds blank lines, each one ends a goldmark paragraph, so the rest of the literal becomes paragraphs that read as prose.
+So a paragraph is frozen when it opens a literal that runs past the end of its line (`{`, optional whitespace, a backtick, with an even number of backticks before the `{` so that it is not inside a code span), or when it leaves the count of unescaped backticks odd with a `{` before the unmatched one.
+The second case starts a chain: the walk keeps counting in the raw source, and while the count is odd, each paragraph that starts there is inside the literal and passes through byte-for-byte; the first paragraph that starts with the count even is handled as usual.
+A literal on one line is left to reflow, which never breaks inside what goldmark reads as a code span, so prose such as "N × {`Before`, `After`}" still reflows.
 Counting backticks rather than lexing JavaScript keeps this a skip rule, not a second grammar to drift from MDX's.
 Its one guard against a miscount is the code fence: a line opening with an unescaped run of three backticks cannot be inside a real template literal, so it ends the chain, and a count thrown off by a backtick in a quoted string stops there instead of running on out of phase.
 A blank line elsewhere in an expression, between attributes or inside an object literal, keeps the old handling; a miscount before a fence freezes prose that could have reflowed; neither changes a render.
