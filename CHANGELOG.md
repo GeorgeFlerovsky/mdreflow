@@ -36,6 +36,8 @@ At release time the section is retitled to the version and the prose lead is wri
   The check that catches this read the reflowed lines with their `>` markers, which hid the definition; the whole-file safety check then caught it instead and left the entire file unformatted.
 - A paragraph with a code fence indented far enough to be part of the paragraph's text, such as a fence tab-indented under a list item with no blank line before it, is now left as written.
   CommonMark reads such a fence as text, so mdreflow joined it into the prose, but MDX disables indented code and reads it as a fenced code block, which the join turned into inline code.
+- An MDX template literal with blank lines, such as a code sample passed as `` code={`…`} `` or `` <CodeBlock>{`…`}</CodeBlock> ``, is now left exactly as written.
+  The text after each blank line was reflowed as a prose paragraph, which rewrote the code the page shows.
 
 ## v0.3.0 (2026-08-14)
 

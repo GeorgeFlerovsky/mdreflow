@@ -185,6 +185,7 @@ Each rule is tagged by origin so dialect profiles can subset the existing rules 
 | JSX blocks, `{expr}` spans | MDX | skip block / no-break span |
 | Lines holding only a tag (`</Steps>`, `<RequestId />`) | MDX | immovable boundary (below) |
 | Paragraphs with a fence line indented into lazy continuation | MDX | skip block (MDX disables indented code, so it reads a fence where CommonMark reads text) |
+| Template literals with blank lines (`` code={`…`} ``, `` <CodeBlock>{`…`} ``) | MDX | skip the paragraphs that open or lie inside the literal (below) |
 | `:::` directives | Docusaurus/remark | skip fence lines; interior prose reflows |
 | Math blocks (`$$`) | GFM, Docusaurus | skip block |
 | Hugo shortcodes (`{{< … >}}`, `{{% … %}}`) | Hugo | skip block / no-break span |
@@ -205,6 +206,15 @@ A tag followed by text on the same line is inline HTML or JSX in a paragraph, in
 The rule is absent from `markerLineStartRE` because it depends on where a line ends, which a break candidate cannot know; a line that reflow leaves holding only a tag is frozen as-is on the next pass.
 
 The one construct post-parse rules cannot recover is a multi-line JSX opening tag whose closing `>` sits alone on a line (goldmark consumes it as an empty blockquote) — documented as a known limitation, revisit with a narrow raw-line fence if it shows up in real content.
+
+**A template literal holding blank lines freezes its paragraphs.** A code sample passed to a component as a template literal, as an attribute (`` code={`…`} ``) or as children (`` <CodeBlock>{`…`}</CodeBlock> ``), often holds blank lines.
+Each one ends a goldmark paragraph, so the literal's text becomes paragraphs that read as prose, and reflowing them rewrites the code the page shows.
+So a paragraph, or an HTML block, that contains `{` and a backtick and leaves the count of unescaped backticks odd starts a chain: the walk keeps counting in the raw source, and while the count is odd, each paragraph that starts there is inside the literal.
+The paragraph that opens the chain and every paragraph inside it pass through byte-for-byte; the first paragraph that starts with the count even is handled as usual.
+Counting backticks rather than lexing JavaScript keeps this a skip rule, not a second grammar to drift from MDX's.
+Its one guard against a miscount is the code fence: a line opening with an unescaped run of three backticks cannot be inside a real template literal, so it ends the chain, and a count thrown off by a backtick in a quoted string stops there instead of running on out of phase.
+A blank line elsewhere in an expression, between attributes or inside an object literal, keeps the old handling; a miscount before a fence freezes prose that could have reflowed; neither changes a render.
+The rule is idempotent: every paragraph it reads is frozen, and the blocks between them never reflow.
 
 ### Sentence segmentation
 
