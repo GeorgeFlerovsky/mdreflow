@@ -9,6 +9,9 @@ At release time the section is retitled to the version and the prose lead is wri
 
 ## Unreleased
 
+- An MDX template literal with blank lines, such as a code sample passed as `` code={`…`} `` or `` <CodeBlock>{`…`}</CodeBlock> ``, is now left exactly as written.
+  The text after each blank line was reflowed as a prose paragraph, which rewrote the code the page shows.
+
 ## v0.3.0 (2026-08-14)
 
 **Expect a one-time reflow across your docs on this upgrade.** Sentence mode now splits before a sentence that opens with inline code or emphasis, which is common in technical prose, so most files that use it will pick up new line breaks the first time you run this version.
